@@ -1,4 +1,6 @@
-package com.huobi.response;
+package api.huobi.response;
+
+import com.google.common.base.MoreObjects;
 
 /**
  * @Author ISME
@@ -52,5 +54,15 @@ public class OrdersDetailResponse<T> {
 
     public void setErrMsg(String errMsg) {
         this.errMsg = errMsg;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("status", status)
+                .add("errCode", errCode)
+                .add("errMsg", errMsg)
+                .add("data", data)
+                .toString();
     }
 }

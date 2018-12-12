@@ -1,4 +1,4 @@
-package com.huobi.request;
+package api.huobi.request;
 
 /**
  * @Author ISME

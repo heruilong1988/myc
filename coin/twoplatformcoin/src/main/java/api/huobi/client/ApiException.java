@@ -1,4 +1,4 @@
-package com.huobi.api;
+package api.huobi.client;
 
 /**
  * ApiException if api returns error.

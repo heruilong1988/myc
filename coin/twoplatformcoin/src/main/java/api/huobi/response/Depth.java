@@ -1,4 +1,4 @@
-package com.huobi.response;
+package api.huobi.response;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -9,7 +9,8 @@ import java.util.List;
  * @Time 14:39
  */
 
-public class Depth {
+public class
+Depth {
 
     /**
      * id : 1489464585407

@@ -1,6 +1,7 @@
-package com.huobi.response;
+package api.huobi.response;
 
-import com.huobi.api.ApiException;
+
+import api.huobi.client.ApiException;
 
 /**
  * @Author ISME

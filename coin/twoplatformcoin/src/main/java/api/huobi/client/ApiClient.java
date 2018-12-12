@@ -1,5 +1,24 @@
-package com.huobi.api;
+package api.huobi.client;
 
+import api.huobi.request.CreateOrderRequest;
+import api.huobi.request.DepthRequest;
+import api.huobi.request.IntrustOrdersDetailRequest;
+import api.huobi.response.*;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.SerializationFeature;
+
+import okhttp3.*;
+import okhttp3.OkHttpClient.Builder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -12,67 +31,9 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.huobi.request.CreateOrderRequest;
-import com.huobi.request.DepthRequest;
-import com.huobi.request.IntrustOrdersDetailRequest;
-import com.huobi.response.Account;
-import com.huobi.response.Accounts;
-import com.huobi.response.AccountsResponse;
-import com.huobi.response.ApiResponse;
-import com.huobi.response.Balance;
-import com.huobi.response.BalanceResponse;
-import com.huobi.response.Batchcancel;
-import com.huobi.response.BatchcancelBean;
-import com.huobi.response.BatchcancelResponse;
-import com.huobi.response.CurrencysResponse;
-import com.huobi.response.Depth;
-import com.huobi.response.DepthResponse;
-import com.huobi.response.DetailResponse;
-import com.huobi.response.Details;
-import com.huobi.response.HistoryTradeResponse;
-import com.huobi.response.IntrustDetail;
-import com.huobi.response.IntrustDetailResponse;
-import com.huobi.response.Kline;
-import com.huobi.response.KlineResponse;
-import com.huobi.response.MatchresultsOrdersDetailResponse;
-import com.huobi.response.Merged;
-import com.huobi.response.MergedResponse;
-import com.huobi.response.OrdersDetailResponse;
-import com.huobi.response.SubmitcancelResponse;
-import com.huobi.response.Symbol;
-import com.huobi.response.Symbols;
-import com.huobi.response.SymbolsResponse;
-import com.huobi.response.TimestampResponse;
-import com.huobi.response.TradeResponse;
-
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.OkHttpClient.Builder;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 /**
  * API client.
@@ -211,7 +172,10 @@ public class ApiClient {
     }
 
     /**
-     * GET /market/depth 获取 Market Depth 数据
+     * GET /market/depth 获取 Market MDepth 数据
+     *
+     * "bids": 买盘,[price(成交价), amount(成交量)], 按price降序,
+     * "asks": 卖盘,[price(成交价), amount(成交量)], 按price升序
      *
      * @param request
      * @return
@@ -421,7 +385,7 @@ public class ApiClient {
 
 
     // send a GET request.
-    <T> T get(String uri, Map<String, String> params, TypeReference<T> ref) {
+    public <T> T get(String uri, Map<String, String> params, TypeReference<T> ref) {
         if (params == null) {
             params = new HashMap<>();
         }
@@ -429,12 +393,12 @@ public class ApiClient {
     }
 
     // send a POST request.
-    <T> T post(String uri, Object object, TypeReference<T> ref) {
+    public <T> T post(String uri, Object object, TypeReference<T> ref) {
         return call("POST", uri, object, new HashMap<String, String>(), ref);
     }
 
     // call api by endpoint.
-    <T> T call(String method, String uri, Object object, Map<String, String> params,
+    public <T> T call(String method, String uri, Object object, Map<String, String> params,
                TypeReference<T> ref) {
         ApiSignature sign = new ApiSignature();
         sign.createSignature(this.accessKeyId, this.accessKeySecret, method, API_HOST, uri, params);
@@ -493,9 +457,9 @@ public class ApiClient {
     static String getHost() {
         String host = null;
         try {
-            host = new  URL(API_URL).getHost();
+            host = new URL(API_URL).getHost();
         } catch (MalformedURLException e) {
-            System.err.println("parse API_URL error,system exit!,please check API_URL:" + API_URL ); 
+            System.err.println("parse API_URL error,system exit!,please check API_URL:" + API_URL );
             System.exit(0);
         }
         return host;

@@ -1,4 +1,4 @@
-package com.huobi.request;
+package api.huobi.request;
 
 public class CreateOrderRequest {
     public static interface OrderType {

@@ -1,4 +1,4 @@
-package com.huobi.response;
+package api.huobi.response;
 
 public class Symbol {
 

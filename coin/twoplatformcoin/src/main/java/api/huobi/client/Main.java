@@ -1,31 +1,207 @@
-package com.huobi.api;
+package api.huobi.client;
 
+
+
+import api.huobi.response.Account;
+import api.huobi.response.Symbol;
+import api.req.MCancelOrderRequest;
+import api.req.MGetBalanceRequest;
+import api.req.MPlaceOrderRequest;
+import api.req.MQueryOrderRequest;
+import api.rsp.MCancelOrderRsp;
+import api.rsp.MDepth;
+
+import api.rsp.MGetAccountsRsp;
+import api.rsp.MGetBalanceRsp;
+import api.rsp.MOrderSide;
+import api.rsp.MOrderType;
+import api.rsp.MPlaceOrderRsp;
+import api.rsp.MQueryOrderRsp;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-
-import com.huobi.request.CreateOrderRequest;
-import com.huobi.request.DepthRequest;
-import com.huobi.request.IntrustOrdersDetailRequest;
-import com.huobi.response.*;
+import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 
 public class Main {
 
-    static final String API_KEY = "7cea27e8-ca6c4a23-ef8ec797-fa703";
-    static final String API_SECRET = "4dfc60ad-e1547002-ba504603-1b19e";
-  
+    static String API_KEY;
+    static String API_SECRET;
+    static ApiClient client = new ApiClient(API_KEY, API_SECRET);
+    static AsyncApiClient asyncApiClient;
     
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+
+        System.setProperty("socksProxyHost", "172.31.1.162");
+        System.setProperty("http.proxyPort","1080");
+        /*
         System.setProperty("http.proxyHost", "localhost");
         System.setProperty("http.proxyPort", "1080");
 
 // 对https也开启代理
         System.setProperty("https.proxyHost", "localhost");
         System.setProperty("https.proxyPort", "1080");
+
+*/
+        Properties properties = new Properties();
+        properties.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("sys.properties"));
+
+        API_KEY = properties.getProperty("huobi-accesskey");
+        API_SECRET = properties.getProperty("huobi-secretkey");
+
+        asyncApiClient = new AsyncApiClient(API_KEY, API_SECRET);
+
         try {
-            apiSample();
+            //apiSample();
+            asyncSample();
+            System.out.println();
         } catch (ApiException e) {
             System.err.println("API Error! err-code: " + e.getErrCode() + ", err-msg: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        asyncApiClient.close();
+    }
+
+    static void asyncSample() {
+        //asyncGetSymbol();
+        //asyncDepth();
+        //asyncGetAccounts();
+        //asyncGetBalance();
+        asyncPlaceOrder();
+
+    }
+
+    static void asyncGetSymbol() {
+        FutureTask<List<Symbol>> futureTask = asyncApiClient.getSymbols();
+        if(futureTask.isDone()) {
+            System.out.println("is done");
+        }else{
+            System.out.print("not done yet");
+        }
+
+        try {
+            List<Symbol> symbols = futureTask.get();
+            System.out.println(symbols);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
+    static void asyncGetAccounts() {
+        FutureTask<MGetAccountsRsp> futureTask = asyncApiClient.getAccounts();
+        if(futureTask.isDone()) {
+            System.out.println("is done");
+        }else{
+            System.out.print("not done yet");
+        }
+
+        try {
+            MGetAccountsRsp mGetAccountsRsp = futureTask.get();
+            System.out.println(mGetAccountsRsp);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+
+    }
+    static void asyncDepth() {
+        FutureTask<MDepth> depthFutureTask = asyncApiClient.depth("btc","usdt");
+        if(depthFutureTask.isDone()) {
+            System.out.println("is done");
+        }else{
+            System.out.print("not done yet");
+        }
+
+        try {
+            MDepth mDepth = depthFutureTask.get();
+
+            System.out.println(mDepth);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    static void asyncGetBalance() {
+        //accountId:3341355
+        MGetBalanceRequest mGetBalanceRequest = new MGetBalanceRequest();
+        mGetBalanceRequest.setAccountId(String.valueOf(3341355));
+        FutureTask<MGetBalanceRsp> futureTask = asyncApiClient.getBalance(mGetBalanceRequest);
+        if(futureTask.isDone()) {
+            System.out.println("done");
+        }else{
+            System.out.println("not done");
+        }
+
+        try{
+            MGetBalanceRsp mGetBalanceRsp = futureTask.get();
+            System.out.println(mGetBalanceRsp);
+        }catch (InterruptedException e) {
+            e.printStackTrace();
+        }catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
+    static void asyncPlaceOrder() {
+        MPlaceOrderRequest mPlaceOrderRequest = new MPlaceOrderRequest();
+        mPlaceOrderRequest.setAccountId(String.valueOf(3341355));
+        mPlaceOrderRequest.setQuantity(0.001);
+        mPlaceOrderRequest.setSide(MOrderSide.buy);
+        mPlaceOrderRequest.setType(MOrderType.limit);
+        mPlaceOrderRequest.setBaseCoin("eth");
+        mPlaceOrderRequest.setQuoteCoin("usdt");
+        mPlaceOrderRequest.setPrice(1);
+
+        FutureTask<MPlaceOrderRsp> futureTask = asyncApiClient.placeOrder(mPlaceOrderRequest);
+        if(futureTask.isDone()) {
+            System.out.println("done");
+        }else {
+            System.out.println("not done");
+        }
+
+        try {
+            MPlaceOrderRsp mPlaceOrderRsp = futureTask.get();
+            System.out.println(mPlaceOrderRsp);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
+    static void asyncQueryOrder() {
+        MQueryOrderRequest mQueryOrderRequest = new MQueryOrderRequest();
+        FutureTask<MQueryOrderRsp> futureTask = asyncApiClient.queryOrder(mQueryOrderRequest);
+
+        try {
+            MQueryOrderRsp mQueryOrderRsp = futureTask.get();
+            System.out.println(mQueryOrderRsp);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    static void asyncCancelOrder() {
+        MCancelOrderRequest mCancelOrderRequest = new MCancelOrderRequest();
+        FutureTask<MCancelOrderRsp> futureTask = asyncApiClient.cancelOrder(mCancelOrderRequest);
+
+        try {
+            MCancelOrderRsp mCancelOrderRsp = futureTask.get();
+            System.out.println(mCancelOrderRsp);
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
             e.printStackTrace();
         }
     }
